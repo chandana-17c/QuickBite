@@ -1,0 +1,6 @@
+[project]
+name = "quickbite-api"
+version = "1.0.0"
+dependencies = ["fastapi>=0.115,<1", "uvicorn[standard]>=0.30,<1", "pydantic[email]>=2.8,<3", "coverage>=7.6,<8"]
+[tool.coverage.run]
+source = ["app"]

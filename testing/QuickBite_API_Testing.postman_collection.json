@@ -1,0 +1,962 @@
+{
+  "info": {
+    "name": "QuickBite API Testing",
+    "description": "32 repeatable REST API scenarios with expected-value assertions. Run against the local FastAPI service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/health"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Health status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Health service healthy\", function(){pm.expect(pm.response.json().status).to.eql('ok')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register valid unique user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Test User\",\"email\":\"{{uniqueEmail}}\",\"password\":\"QuickBite123!\"}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Register valid unique user status\", function(){pm.response.to.have.status(201);});",
+              "pm.test(\"Register valid unique user token returned\", function(){pm.expect(pm.response.json().token).to.match(/^demo-/)});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register duplicate email",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"Test User\",\"email\":\"{{uniqueEmail}}\",\"password\":\"QuickBite123!\"}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Register duplicate email status\", function(){pm.response.to.have.status(409);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register invalid email",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\":\"X\",\"email\":\"bad-email\",\"password\":\"QuickBite123!\"}"
+        },
+        "url": "{{baseUrl}}/api/auth/register"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Register invalid email status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login valid user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{{uniqueEmail}}\",\"password\":\"QuickBite123!\"}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Login valid user status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Login valid user email matches\", function(){pm.expect(pm.response.json().email).to.eql(pm.environment.get('uniqueEmail'))});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login incorrect password",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"{{uniqueEmail}}\",\"password\":\"wrong-password\"}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Login incorrect password status\", function(){pm.response.to.have.status(401);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login unknown user",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\":\"nobody@example.com\",\"password\":\"QuickBite123!\"}"
+        },
+        "url": "{{baseUrl}}/api/auth/login"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Login unknown user status\", function(){pm.response.to.have.status(401);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Retrieve menu",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/menu"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Retrieve menu status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Retrieve menu twelve menu items\", function(){pm.expect(pm.response.json()).to.have.lengthOf(12)});",
+              "pm.test(\"Retrieve menu prices are authoritative\", function(){pm.expect(Number(pm.response.json()[0].price)).to.eql(249)});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Retrieve valid item",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/menu/1"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Retrieve valid item status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Retrieve valid item item details correct\", function(){pm.expect(pm.response.json().name).to.eql('Classic Smash Burger')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Retrieve invalid item",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/api/menu/9999"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Retrieve invalid item status\", function(){pm.response.to.have.status(404);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Validate single cart item",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Validate single cart item status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Validate single cart item subtotal calculation\", function(){pm.expect(pm.response.json().subtotal).to.eql('249.00')});",
+              "pm.test(\"Validate single cart item total includes fee and tax\", function(){pm.expect(pm.response.json().total).to.eql('301.45')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Validate multiple items",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":2},{\"item_id\":9,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Validate multiple items status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Validate multiple items multiple subtotal\", function(){pm.expect(pm.response.json().subtotal).to.eql('647.00')});",
+              "pm.test(\"Validate multiple items free delivery\", function(){pm.expect(pm.response.json().delivery_fee).to.eql('0.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Update quantity recalculates",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":2}]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Update quantity recalculates status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Update quantity recalculates updated line quantity\", function(){pm.expect(pm.response.json().items[0].quantity).to.eql(2)});",
+              "pm.test(\"Update quantity recalculates updated subtotal\", function(){pm.expect(pm.response.json().subtotal).to.eql('498.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Remove line recalculates remaining cart",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":9,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Remove line recalculates remaining cart status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Remove line recalculates remaining cart remaining subtotal\", function(){pm.expect(pm.response.json().subtotal).to.eql('149.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empty cart rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Empty cart rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Zero quantity rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":0}]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Zero quantity rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negative quantity rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":-2}]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Negative quantity rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Unknown cart item rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":888,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/cart/validate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Unknown cart item rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subtotal below minimum rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":11,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Subtotal below minimum rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delivery charged below threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Delivery charged below threshold status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Delivery charged below threshold delivery charge\", function(){pm.expect(pm.response.json().delivery_fee).to.eql('40.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Free delivery at threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":2}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Free delivery at threshold status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Free delivery at threshold free delivery at 498? fee expected\", function(){pm.expect(pm.response.json().delivery_fee).to.eql('40.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Free delivery above threshold",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":2},{\"item_id\":9,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Free delivery above threshold status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Free delivery above threshold free delivery\", function(){pm.expect(pm.response.json().delivery_fee).to.eql('0.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "QUICK10 discount and tax",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":1}],\"coupon\":\"QUICK10\"}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"QUICK10 discount and tax status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"QUICK10 discount and tax discount amount\", function(){pm.expect(pm.response.json().discount).to.eql('24.90')});",
+              "pm.test(\"QUICK10 discount and tax discounted tax\", function(){pm.expect(pm.response.json().tax).to.eql('11.21')});",
+              "pm.test(\"QUICK10 discount and tax total\", function(){pm.expect(pm.response.json().total).to.eql('275.31')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "SAVE50 discount",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":1}],\"coupon\":\"SAVE50\"}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"SAVE50 discount status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"SAVE50 discount discount amount\", function(){pm.expect(pm.response.json().discount).to.eql('50.00')});",
+              "pm.test(\"SAVE50 discount total\", function(){pm.expect(pm.response.json().total).to.eql('248.95')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Invalid coupon rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":1}],\"coupon\":\"NOPE\"}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Invalid coupon rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Large quantity math",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":100}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Large quantity math status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Large quantity math large subtotal\", function(){pm.expect(pm.response.json().subtotal).to.eql('24900.00')});",
+              "pm.test(\"Large quantity math large total\", function(){pm.expect(pm.response.json().total).to.eql('26145.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Missing cart items rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Missing cart items rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Incorrect quantity type rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":\"one\"}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Incorrect quantity type rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Incorrect item ID type rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":\"burger\",\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Incorrect item ID type rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client price manipulation ignored",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"items\":[{\"item_id\":1,\"quantity\":1,\"price\":0.01}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/calculate"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Client price manipulation ignored status\", function(){pm.response.to.have.status(200);});",
+              "pm.test(\"Client price manipulation ignored server menu price used\", function(){pm.expect(pm.response.json().subtotal).to.eql('249.00')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Valid checkout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customer_name\":\"Demo Customer\",\"email\":\"demo@example.com\",\"address\":\"12 Sample Street, Bengaluru\",\"items\":[{\"item_id\":1,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/checkout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Valid checkout status\", function(){pm.response.to.have.status(201);});",
+              "pm.test(\"Valid checkout order ID created\", function(){pm.expect(pm.response.json().order_id).to.match(/^QB-/)});",
+              "pm.test(\"Valid checkout checkout total\", function(){pm.expect(pm.response.json().total).to.eql('301.45')});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout missing address rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customer_name\":\"Demo\",\"email\":\"demo@example.com\",\"items\":[{\"item_id\":1,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/checkout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Checkout missing address rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout empty cart rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customer_name\":\"Demo\",\"email\":\"demo@example.com\",\"address\":\"12 Sample Street\",\"items\":[]}"
+        },
+        "url": "{{baseUrl}}/api/orders/checkout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Checkout empty cart rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Checkout invalid email rejected",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"customer_name\":\"Demo\",\"email\":\"not-an-email\",\"address\":\"12 Sample Street\",\"items\":[{\"item_id\":1,\"quantity\":1}]}"
+        },
+        "url": "{{baseUrl}}/api/orders/checkout"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Checkout invalid email rejected status\", function(){pm.response.to.have.status(422);});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (pm.info.requestName === 'Register valid unique user') { pm.environment.set('uniqueEmail', 'qb-' + Date.now() + '-' + Math.floor(Math.random()*100000) + '@example.com'); }"
+        ]
+      }
+    }
+  ]
+}

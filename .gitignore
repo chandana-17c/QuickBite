@@ -1,0 +1,34 @@
+
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Python virtual environments
+.venv/
+venv/
+**/.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Coverage temporary files
+.coverage
+**/.coverage
+htmlcov/
+
+# Frontend build output
+frontend/dist/
+
+# Keep generated project reports
+reports/*
+!reports/.gitkeep
+!reports/QuickBite_Test_Report.html
+!reports/coverage_html/
+reports/coverage_html/*
+!reports/coverage_html/index.html
